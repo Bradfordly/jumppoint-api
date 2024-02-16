@@ -1,0 +1,34 @@
+name: deploy games.bradfordly.com static web assets to s3
+on:
+  pull_request:
+    branches: [ "develop" ]
+  workflow_dispatch:
+permissions:
+      id-token: write
+      contents: read
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    outputs:
+      env-name: ${{ steps.env-name.outputs.environment }}
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+          role-session-name: githubactions
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: configure environment name
+        id: env-name
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          ENVIRONMENT=`echo $REPO | tr "/" "-"`
+          echo "Environment name: $ENVIRONMENT"
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+      - name: upload src to s3
+        run: |
+          aws s3 cp ./src/* ${{ secrets.AWS_S3_PATH }}/*
+          
