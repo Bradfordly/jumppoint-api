@@ -9,9 +9,9 @@ exports.handler = async function (event) {
       "STRING_VALUE",
     ],
     DocumentName: "AWS-RunShellScript",
-    Parameters: { // Parameters
-      "<keys>": [ // ParameterValueList
-        "STRING_VALUE",
+    Parameters: {
+      "commands": [
+        '/bin/su -c "/home/{server}/{server} {command}" - {server}',
       ],
     }
   };
@@ -20,4 +20,3 @@ exports.handler = async function (event) {
   console.log(response);
   return response.statusCode;
 };
-
