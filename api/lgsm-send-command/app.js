@@ -3,7 +3,6 @@ const { SSMClient, SendCommandCommand } = require("@aws-sdk/client-ssm");
 const client = new SSMClient(config);
 
 exports.handler = async function (event) {
-  let statusCode;
   let input = {
     InstanceIds: [
       "STRING_VALUE",
