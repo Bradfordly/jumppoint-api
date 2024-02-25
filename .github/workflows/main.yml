@@ -1,34 +1,57 @@
-name: deploy games.bradfordly.com static web assets to s3
+name: Jump Point API deployment
 on:
+  push:
+    branches: [ "develop", "main" ] 
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "feature/*", "bugfix/*" ] 
   workflow_dispatch:
 permissions:
       id-token: write
       contents: read
 jobs:
-  upload:
+  checkout_code:
     runs-on: ubuntu-latest
-    outputs:
-      env-name: ${{ steps.env-name.outputs.environment }}
     steps:
       - name: checkout code
         uses: actions/checkout@v4
+      
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
           role-session-name: githubactions
           aws-region: ${{ secrets.AWS_REGION }}
-      - name: configure environment name
-        id: env-name
-        env:
-          REPO: ${{ github.repository }}
+  
+  run_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4.0.2
+      - name: Install dependencies
+        run: npm ci
+      - name: Build app
+        run: npm run build --if-present
+      - name: Run unit tests
+        run: npm test
+      
+  
+  deploy_aws_cloudformation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: upload cft to s3
         run: |
-          ENVIRONMENT=`echo $REPO | tr "/" "-"`
-          echo "Environment name: $ENVIRONMENT"
-          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
-      - name: upload src to s3
+          aws s3 cp ./jumppoint-api-cft.yaml "${{ secrets.AWS_S3_PATH }}/jumppoint-api-${branch}-cft.yaml"
+      - name: deploy to aws cloudformation
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: "jumppoint-api-${branch}"
+          capabilities: CAPABILITY_NAMED_IAM
+          template: "${{ secrets.AWS_S3_URL }}/jumppoint-api-${branch}-cft.yaml"
+          parameter-overrides: >-
+            Branch="${branch}"
+      
+      - name: delete failed stack
+        if: failure()
         run: |
-          aws s3 cp src ${{ secrets.AWS_S3_PATH }} --recursive
+          aws cloudformation delete-stack --stack-name "jumppoint-api-${branch}"
           
