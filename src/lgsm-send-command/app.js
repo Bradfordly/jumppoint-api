@@ -11,10 +11,18 @@ const serverName = {
 // * input validation (API spec?)
 // * error handling
 
-exports.handler = async (event, context) => {
-    let command = event.command
-    let game = event.game
-    game = serverName[game]
+exports.handler = async (event) => {
+    let body = JSON.parse(event.body);
+    let command = body.command;
+    let game = serverName[body.game];
+
+    var ec2Id;
+    try {
+
+    } catch (e) {
+
+    }
+
     let input = {
         InstanceIds: [
           "",
