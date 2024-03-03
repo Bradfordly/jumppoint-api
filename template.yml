@@ -14,6 +14,10 @@ Parameters:
     Description: Name of the API Gateway
     Type: String
     Default: jump-point-api
+  KnowhereEC2Id:
+    Description: EC2 Instance ID of the Knowhere host
+    Type: String
+    Default: i-09a8fc3dd12e9c4ad
 
 Resources:
   LambdaFunction:
@@ -21,6 +25,9 @@ Resources:
     Properties:
       FunctionName: !Sub '${AppName}-lgsm-send-command'
       Handler: app.handler
+      Environment:
+        Variables:
+          KNOWHERE_EC2_ID: ${KnowhereEC2Id}
 
   RestApi:
     Type: AWS::ApiGateway::RestApi
