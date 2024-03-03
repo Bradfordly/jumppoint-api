@@ -30,10 +30,12 @@ jobs:
     steps:
       - name: Setup Node.js environment
         uses: actions/setup-node@v4.0.2
-      - name: Install dependencies
+      - name: Install dependencies - LGSM Send Command
         run: npm ci
-      - name: Build app
+        working-directory: src/lgsm-send-command
+      - name: Build app - LGSM Send Command
         run: npm run build --if-present
+        working-directory: src/lgsm-send-command
       - name: Build SAM environment
         run: sam build --use-container
   
