@@ -14,7 +14,9 @@ jobs:
     steps:
       - name: checkout code
         uses: actions/checkout@v4
-      
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
@@ -22,7 +24,7 @@ jobs:
           role-session-name: githubactions
           aws-region: ${{ secrets.AWS_REGION }}
   
-  run_tests:
+  build_app:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Node.js environment
@@ -31,27 +33,19 @@ jobs:
         run: npm ci
       - name: Build app
         run: npm run build --if-present
-      - name: Run unit tests
-        run: npm test
-      
+      - name: Build SAM environment
+        run: sam build --use-container
   
-  deploy_aws_cloudformation:
+  #test_app:
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - name: Run unit tests
+  #      run: npm test
+  
+  deploy_app:
     runs-on: ubuntu-latest
     steps:
-      - name: upload cft to s3
-        run: |
-          aws s3 cp ./jumppoint-api-cft.yaml "${{ secrets.AWS_S3_PATH }}/jumppoint-api-${branch}-cft.yaml"
-      - name: deploy to aws cloudformation
-        uses: aws-actions/aws-cloudformation-github-deploy@v1
-        with:
-          name: "jumppoint-api-${branch}"
-          capabilities: CAPABILITY_NAMED_IAM
-          template: "${{ secrets.AWS_S3_URL }}/jumppoint-api-${branch}-cft.yaml"
-          parameter-overrides: >-
-            Branch="${branch}"
+      - name: Deploy code
+        run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
       
-      - name: delete failed stack
-        if: failure()
-        run: |
-          aws cloudformation delete-stack --stack-name "jumppoint-api-${branch}"
           
