@@ -1,31 +1,19 @@
-const { SSMClient, SendCommandCommand } = require("@aws-sdk/client-ssm");
+import { SSMClient, SendCommandCommand } from "@aws-sdk/client-ssm";
+
 const ssmClient = new SSMClient({region: "us-east-1"});
-const hostName = process.env.HOST_NAME;
+const ec2Id = process.env.KNOWHERE_EC2_ID;
 const serverName = {
   minecraft: "mcserver",
   palworld: "pwserver"
 };
 
-// TODO:
-// * run ec2.DescribeInstanceTags w/ host name
-// * input validation (API spec?)
-// * error handling
-
-exports.handler = async (event) => {
+export async function handler(event) {
     let body = JSON.parse(event.body);
     let command = body.command;
     let game = serverName[body.game];
-
-    var ec2Id;
-    try {
-
-    } catch (e) {
-
-    }
-
     let input = {
         InstanceIds: [
-          "",
+          ec2Id,
         ],
         DocumentName: "AWS-RunShellScript",
         Parameters: {
@@ -38,4 +26,4 @@ exports.handler = async (event) => {
     const response = await client.send(ssmCommand);
     console.log(response);
     return response.statusCode;
-};
+}
