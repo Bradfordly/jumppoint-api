@@ -25,6 +25,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
   
   build_app:
+    needs: checkout_code
     runs-on: ubuntu-latest
     steps:
       - name: Setup Node.js environment
@@ -43,9 +44,9 @@ jobs:
   #      run: npm test
   
   deploy_app:
+    needs: build_app
     runs-on: ubuntu-latest
     steps:
       - name: Deploy code
         run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
-      
           
