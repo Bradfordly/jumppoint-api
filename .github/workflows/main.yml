@@ -13,7 +13,8 @@ jobs:
   build_app:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Setup Node.js environment
         uses: actions/setup-node@v4.0.2
       - name: Install dependencies - LGSM Send Command
@@ -22,8 +23,6 @@ jobs:
       - name: Build app - LGSM Send Command
         run: npm run build --if-present
         working-directory: /src/lgsm-send-command
-      - name: Build SAM environment
-        run: sam build --use-container
   
   #test_app:
   #  runs-on: ubuntu-latest
@@ -35,17 +34,20 @@ jobs:
     needs: build_app
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: configure aws credentials
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
           role-session-name: githubactions
           aws-region: ${{ secrets.AWS_REGION }}
-      - name: setup aws sam
+      - name: Setup AWS SAM
         uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
-      - name: deploy sam
+      - name: Build SAM environment
+        run: sam build --use-container
+      - name: Deploy SAM
         run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
           
